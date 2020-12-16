@@ -1,0 +1,1 @@
+Based on: https://www.researchgate.net/profile/Yinzhen_Li/publication/2824299_Solving_Multi-Objective_Transportation_Problem_by_Spanning_Tree-Based_Genetic_Algorithm/links/543740a50cf2bf1f1f2d4979/Solving-Multi-Objective-Transportation-Problem-by-Spanning-Tree-Based-Genetic-Algorithm.pdf
