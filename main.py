@@ -5,6 +5,7 @@ import numpy as np
 
 random.seed(10)
 
+
 def convert_tree_to_prufer(tree: list, n):
     temp_tree = tree.copy()
     prufer = []
@@ -124,6 +125,15 @@ class TransportationProblemSolver(ContinuousGenAlgSolver, BinaryGenAlgSolver):
         print("=====================================================")
         return sum
 
+    @staticmethod
+    def sort_by_fitness(fitness, population):
+        sorted_fitness = np.argsort(fitness)[::1]
+
+        population = population[sorted_fitness, :]
+        fitness = fitness[sorted_fitness]
+        print("FITNESS:", fitness)
+        return fitness, population
+
     def initialize_population(self):
         population = []
         while len(population) < self.pop_size:
@@ -162,8 +172,18 @@ class TransportationProblemSolver(ContinuousGenAlgSolver, BinaryGenAlgSolver):
         if offspring_number == 'first':
             fa = first_parent[0:crossover_pt[0]]
             fb = sec_parent[crossover_pt[0]:]
-            return np.array(list(fa) + list(fb))
-        return np.array(list(sec_parent[0:crossover_pt[0]]) + list(first_parent[crossover_pt[0]:]))
+            res = np.array(list(fa) + list(fb))
+            try:
+                convert_prufer_to_tree(self.supplies, self.demands, list(res), self.n_genes)
+                return res
+            except Exception:
+                return np.array(first_parent.copy())
+        res = np.array(list(sec_parent[0:crossover_pt[0]]) + list(first_parent[crossover_pt[0]:]))
+        try:
+            convert_prufer_to_tree(self.supplies, self.demands, list(res), self.n_genes)
+            return res
+        except Exception:
+            return np.array(sec_parent.copy())
 
     def mutate_population(self, population, n_mutations):
         def reverse_sublist(lst, start, end):
@@ -208,10 +228,15 @@ demands = {
 
 cost = [[4, 4, 3, 4, 8], [5, 8, 9, 10, 15], [6, 2, 5, 1, 12], [3, 5, 6, 9, 9]]
 
-print(convert_prufer_to_tree(supplies.copy(), demands.copy(), [5, 9, 2, 3, 2, 8, 3], 9))
 print("+++++++++++++++++++++++++++++")
-print(convert_tree_to_prufer(convert_prufer_to_tree(supplies.copy(), demands.copy(), [5, 9, 2, 3, 2, 8, 3], 9),9))
+tree = convert_prufer_to_tree(supplies.copy(), demands.copy(), [5, 9, 2, 3, 2, 8, 3], 9)
+prufer = convert_tree_to_prufer(tree ,9)
+
+print("TEST:")
+print(tree)
+print(prufer)
 print(convert_tree_to_prufer([(1, 5, 8), (4, 9, 10), (2, 5, 3), (3, 6, 9), (2, 7, 5), (2, 8, 11), (3, 8, 3), (3, 9, 5)], 9))
 
 solver = TransportationProblemSolver(supplies=supplies, demands=demands, cost=cost, mutation_rate=0.1, selection_rate=0.6, selection_strategy='tournament', pop_size=100, max_gen=200, n_genes=9, inversion_mutation_rate=50, displacement_mutation_rate=50, n_crossover_points=1)
 solver.solve()
+print(convert_prufer_to_tree(supplies.copy(), demands.copy(), solver.best_individual_, 9))
