@@ -3,6 +3,8 @@ from collections import Counter
 import random
 import numpy as np
 
+random.seed(10)
+
 def convert_tree_to_prufer(tree: list, n):
     temp_tree = tree.copy()
     prufer = []
@@ -33,27 +35,32 @@ def convert_prufer_to_tree(supplies:dict, demands:dict, prufer: list, n):
         i = not_prufer[0]
         j = temp_prufer[0]
         index_to_delete = 0
-        if (i in temp_supplies and j in temp_supplies) or (i in temp_demands or j in temp_demands):
+        if (i in temp_supplies and j in temp_supplies) or (i in temp_demands and j in temp_demands):
             for index, k in enumerate(temp_prufer):
-                if not((i in temp_supplies and j in temp_supplies) or (i in temp_demands or j in temp_demands)):
+                if not((i in temp_supplies and k in temp_supplies) or (i in temp_demands and k in temp_demands)):
                     j = k
                     index_to_delete = index
+                    break
+        print(not_prufer)
+        print(temp_prufer)
         not_prufer.pop(0)
         temp_prufer.pop(index_to_delete)
         if j not in temp_prufer:
             not_prufer.append(j)
             not_prufer.sort()
-        """print(temp_supplies)
+        print(temp_supplies)
         print(temp_demands)
         print(i)
         print(j)
-        print("++++++++++++++++++++++++++++++++++++++++")"""
+        print("++++++++++++++++++++++++++++++++++++++++")
         x = min(temp_supplies[min(i, j)], temp_demands[max(j, i)])
         temp_supplies[min(i, j)] -= x
         temp_demands[max(j, i)] -= x
         edge = (min(i, j), max(j, i), x)
         tree.append(edge)
 
+    print(not_prufer)
+    print(prufer)
     x = min(temp_supplies[not_prufer[0]], temp_demands[not_prufer[1]])
     temp_supplies[not_prufer[0]] -= x
     temp_demands[not_prufer[1]] -= x
@@ -122,7 +129,7 @@ class TransportationProblemSolver(ContinuousGenAlgSolver, BinaryGenAlgSolver):
         while len(population) < self.pop_size:
             print(len(population))
             prufer = [random.randint(1, self.n_genes + 1) for i in range(self.n_genes - 2)]
-            """not_prufer = list(set([i for i in range(1, self.n_genes + 1)]) - set(prufer))
+            not_prufer = list(set([i for i in range(1, self.n_genes + 1)]) - set(prufer))
             c = Counter(prufer)
             so = 0
             sd = 0
@@ -138,8 +145,8 @@ class TransportationProblemSolver(ContinuousGenAlgSolver, BinaryGenAlgSolver):
                     nso += 1
                 elif k in self.demands.keys():
                     nsd += 1
-            if so + nso == sd + nsd:
-                population.append(prufer)"""
+            if so + nso != sd + nsd:
+                continue
             try:
                 convert_prufer_to_tree(self.supplies, self.demands, prufer, self.n_genes)
             except Exception:
