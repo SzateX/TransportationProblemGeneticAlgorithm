@@ -250,7 +250,7 @@ class TransportationProblemSolver(ContinuousGenAlgSolver, BinaryGenAlgSolver):
 supplies = {}
 demands = {}
 
-with open("data/data1.txt") as f:
+with open("data/data4.txt") as f:
     suppliers, recipient = map(int, f.readline().split())
     cost = np.zeros((suppliers, recipient))
     for i in range(suppliers):
@@ -261,9 +261,14 @@ with open("data/data1.txt") as f:
         x, y = map(int, f.readline().split())
         demands[x] = y
 
+    print(suppliers, recipient)
+    print(cost)
+
     for line in f:
         x, y, z = map(int, line.split())
-        cost[x-1][y - recipient] = z
+        print(x, y, z)
+        print(y-recipient)
+        cost[x-1][y - suppliers - 1] = z
 
     cost = list(cost)
 
