@@ -3,7 +3,7 @@ from collections import Counter
 import random
 import numpy as np
 
-random.seed(10)
+#random.seed(10)
 
 
 def convert_tree_to_prufer(tree: list, n):
@@ -42,26 +42,26 @@ def convert_prufer_to_tree(supplies:dict, demands:dict, prufer: list, n):
                     j = k
                     index_to_delete = index
                     break
-        print(not_prufer)
-        print(temp_prufer)
+        """print(not_prufer)
+        print(temp_prufer)"""
         not_prufer.pop(0)
         temp_prufer.pop(index_to_delete)
         if j not in temp_prufer:
             not_prufer.append(j)
             not_prufer.sort()
-        print(temp_supplies)
+        """print(temp_supplies)
         print(temp_demands)
         print(i)
         print(j)
-        print("++++++++++++++++++++++++++++++++++++++++")
+        print("++++++++++++++++++++++++++++++++++++++++")"""
         x = min(temp_supplies[min(i, j)], temp_demands[max(j, i)])
         temp_supplies[min(i, j)] -= x
         temp_demands[max(j, i)] -= x
         edge = (min(i, j), max(j, i), x)
         tree.append(edge)
 
-    print(not_prufer)
-    print(prufer)
+    # print(not_prufer)
+    # print(prufer)
     x = min(temp_supplies[not_prufer[0]], temp_demands[not_prufer[1]])
     temp_supplies[not_prufer[0]] -= x
     temp_demands[not_prufer[1]] -= x
@@ -112,17 +112,17 @@ class TransportationProblemSolver(ContinuousGenAlgSolver, BinaryGenAlgSolver):
         tree = convert_prufer_to_tree(self.supplies, self.demands, chromosome, self.n_genes)
         sum = 0
 
-        print(chromosome)
+        """print(chromosome)
         print(tree)
         print(self.supplies)
         print(self.demands)
         print(self.cost)
-        print("+++++++++++++++++++++++++++++++++++++++++++++++++++++")
+        print("+++++++++++++++++++++++++++++++++++++++++++++++++++++")"""
         for branch in tree:
-            print(branch)
+            # print(branch)
             c = self.cost[branch[0] - 1][branch[1] - len(self.cost) - 1]
             sum += c * branch[2]
-        print("=====================================================")
+        # print("=====================================================")"""
         return sum
 
     @staticmethod
@@ -131,13 +131,12 @@ class TransportationProblemSolver(ContinuousGenAlgSolver, BinaryGenAlgSolver):
 
         population = population[sorted_fitness, :]
         fitness = fitness[sorted_fitness]
-        print("FITNESS:", fitness)
+        # print("FITNESS:", fitness)
         return fitness, population
 
     def initialize_population(self):
         population = []
         while len(population) < self.pop_size:
-            print(len(population))
             prufer = [random.randint(1, self.n_genes + 1) for i in range(self.n_genes - 2)]
             not_prufer = list(set([i for i in range(1, self.n_genes + 1)]) - set(prufer))
             c = Counter(prufer)
@@ -174,13 +173,49 @@ class TransportationProblemSolver(ContinuousGenAlgSolver, BinaryGenAlgSolver):
             fb = sec_parent[crossover_pt[0]:]
             res = np.array(list(fa) + list(fb))
             try:
-                convert_prufer_to_tree(self.supplies, self.demands, list(res), self.n_genes)
+                _, rest = convert_prufer_to_tree(self.supplies, self.demands, list(res), self.n_genes)
+                not_prufer = list(set([i for i in range(1, self.n_genes + 1)]) - set(res))
+                c = Counter(res)
+                so = 0
+                sd = 0
+                nso = 0
+                nsd = 0
+                for k, c in c.items():
+                    if k in self.supplies.keys():
+                        so += c + 1
+                    elif k in self.demands.keys():
+                        sd += c + 1
+                for k in not_prufer:
+                    if k in self.supplies.keys():
+                        nso += 1
+                    elif k in self.demands.keys():
+                        nsd += 1
+                if so + nso != sd + nsd:
+                    return np.array(first_parent.copy())
                 return res
             except Exception:
                 return np.array(first_parent.copy())
         res = np.array(list(sec_parent[0:crossover_pt[0]]) + list(first_parent[crossover_pt[0]:]))
         try:
-            convert_prufer_to_tree(self.supplies, self.demands, list(res), self.n_genes)
+            _, rest = convert_prufer_to_tree(self.supplies, self.demands, list(res), self.n_genes)
+            not_prufer = list(set([i for i in range(1, self.n_genes + 1)]) - set(res))
+            c = Counter(res)
+            so = 0
+            sd = 0
+            nso = 0
+            nsd = 0
+            for k, c in c.items():
+                if k in self.supplies.keys():
+                    so += c + 1
+                elif k in self.demands.keys():
+                    sd += c + 1
+            for k in not_prufer:
+                if k in self.supplies.keys():
+                    nso += 1
+                elif k in self.demands.keys():
+                    nsd += 1
+            if so + nso != sd + nsd:
+                return np.array(sec_parent.copy())
             return res
         except Exception:
             return np.array(sec_parent.copy())
@@ -195,7 +230,7 @@ class TransportationProblemSolver(ContinuousGenAlgSolver, BinaryGenAlgSolver):
             L = L[:start] + L[end:]
             return L[:insert_at] + temp + L[insert_at:]
 
-        print(population)
+        """print(population)"""
         pop_copy = population.copy()
         for i in range(len(population)):
             for j in range(n_mutations):
@@ -211,7 +246,38 @@ class TransportationProblemSolver(ContinuousGenAlgSolver, BinaryGenAlgSolver):
 
         return pop_copy
 
-supplies = {
+
+supplies = {}
+demands = {}
+
+with open("data/data1.txt") as f:
+    suppliers, recipient = map(int, f.readline().split())
+    cost = np.zeros((suppliers, recipient))
+    for i in range(suppliers):
+        x, y = map(int, f.readline().split())
+        supplies[x] = y
+
+    for i in range(recipient):
+        x, y = map(int, f.readline().split())
+        demands[x] = y
+
+    for line in f:
+        x, y, z = map(int, line.split())
+        cost[x-1][y - recipient] = z
+
+    cost = list(cost)
+
+print(supplies)
+print(demands)
+print(cost)
+
+solver = TransportationProblemSolver(supplies=supplies, demands=demands, cost=cost, mutation_rate=0.1, selection_rate=0.6, selection_strategy='tournament', pop_size=100, max_gen=200, n_genes=suppliers + recipient, inversion_mutation_rate=50, displacement_mutation_rate=50, n_crossover_points=1)
+solver.solve()
+
+print(convert_prufer_to_tree(supplies, demands, solver.best_individual_, solver.n_genes))
+
+
+"""supplies = {
     1: 8,
     2: 19,
     3: 17,
@@ -237,6 +303,12 @@ print(tree)
 print(prufer)
 print(convert_tree_to_prufer([(1, 5, 8), (4, 9, 10), (2, 5, 3), (3, 6, 9), (2, 7, 5), (2, 8, 11), (3, 8, 3), (3, 9, 5)], 9))
 
-solver = TransportationProblemSolver(supplies=supplies, demands=demands, cost=cost, mutation_rate=0.1, selection_rate=0.6, selection_strategy='tournament', pop_size=100, max_gen=200, n_genes=9, inversion_mutation_rate=50, displacement_mutation_rate=50, n_crossover_points=1)
-solver.solve()
-print(convert_prufer_to_tree(supplies.copy(), demands.copy(), solver.best_individual_, 9))
+print("TEST2:")
+print(convert_prufer_to_tree(supplies, demands, [5,9,2,3,2,8,4], 9))
+
+print("TEST3:")
+
+#solver = TransportationProblemSolver(supplies=supplies, demands=demands, cost=cost, mutation_rate=0.1, selection_rate=0.6, selection_strategy='tournament', pop_size=100, max_gen=200, n_genes=9, inversion_mutation_rate=50, displacement_mutation_rate=50, n_crossover_points=1)
+#solver.solve()
+#print(solver.best_individual_)
+#print(convert_prufer_to_tree(supplies.copy(), demands.copy(), solver.best_individual_, 9))"""
